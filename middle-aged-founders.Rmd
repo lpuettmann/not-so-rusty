@@ -1,0 +1,86 @@
+---
+title: "Middle-aged founders"
+author: "Lukas Püttmann"
+date: "4/26/2020"
+output: html_document
+---
+
+Take data from the [paper](https://www.aeaweb.org/articles?id=10.1257/aeri.20180582)
+"Age and High-Growth Entrepreneurship" by Pierre Azoulay, Benjamin F. Jones, 
+J. Daniel Kim and Javier Miranda and visualize a dataset.
+
+Import libraries:
+
+```{r echo = F, message=F}
+library(tidyverse)
+library(haven)
+```
+
+Download the data to a temporary file location:
+
+```{r}
+temp <- tempfile()
+download.file("https://www.aeaweb.org/doi/10.1257/aeri.20180582.data",temp)
+```
+
+Import the data for "Table A1: Founder Age – Perceptions from Media & Two Prominent VCs".
+
+This defines a function which unzips the relevant file, import the Stata files 
+and adds a column to describe the data source organization:
+
+```{r}
+import_org_dta <- function(org_name) {
+  unz(temp, paste0("programs/", org_name,".dta")) %>% 
+    read_dta() %>% 
+    mutate(org = org_name) %>%
+    select(org, everything())
+}
+```
+
+Define a vector `orgs` holding the names of the organizations for which to 
+import the data and then apply the above function for all of these and attach
+the datasets below to form one dataset:
+
+```{r}
+orgs <- c("Matrix", "Sequoia", "TechCrunch", "Magazines")
+
+perceptions <- lapply(X = orgs, FUN = import_org_dta) %>% 
+  bind_rows()
+```
+
+Close tempororary connection:
+
+```{r}
+unlink(temp)
+```
+
+The resulting dataset holds the name of the organization, the name of the list
+they created, the age of the founder and the company's name:
+
+```{r}
+perceptions
+```
+
+Plot the age of the founders and add a line marking the paper's estimate of 
+45 years against it:
+
+```{r}
+ggplot(perceptions, aes(age, org, color = list)) +
+  geom_jitter(alpha = 0.8, stroke = 0, size = 2.2) +
+  labs(title = 'Founder Age – Perceptions from Media & Two Prominent VCs',
+       subtitle = "Vertical line marks estimate from study (age = 45)",
+       caption = 'Source: "Age and High-Growth Entrepreneurship" (2020) 
+       by Azoulay, Jones, Kim and Miranda.', y = NULL, x = "Founder age", color = "List: ") +
+  theme_minimal() +
+  geom_vline(xintercept = 45) 
+```
+
+```{r}
+ggsave("out_figures/founder_age_perceptions.jpg", width = 8, height = 5)
+```
+
+It's apparent that the media's and VC's perception of successful founders has 
+younger people in mind than what the authors show in their paper.
+
+
+
