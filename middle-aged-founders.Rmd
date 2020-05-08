@@ -20,7 +20,7 @@ Download the data to a temporary file location:
 
 ```{r}
 temp <- tempfile()
-download.file("https://www.aeaweb.org/doi/10.1257/aeri.20180582.data",temp)
+download.file("https://www.aeaweb.org/doi/10.1257/aeri.20180582.data", temp, mode="wb")
 ```
 
 Import the data for "Table A1: Founder Age – Perceptions from Media & Two Prominent VCs".
